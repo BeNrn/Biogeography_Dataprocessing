@@ -7,16 +7,17 @@
 
 ###############################################
 
-file_base <- "~/Studium/02_Master/07_Biogeographie/R/Biogeo_Dataprocessing/"
+file_base <- "~/Studium/02_Master/07_Biogeographie/R/Biogeography_Dataprocessing/"
 #file_base <- "F:/MODULE/07_Biogeographie/R/Biogeo_Dataprocessing/"
-currentVersion <- "00"
+currentVersion <- "11"
+
 library(stringr)
 #--------------------------------------------------------------------
 # 1 READ THE DATA
 
 #general
 general <- read.csv(paste0(file_base, paste0("org/Vers", currentVersion, "_general.csv")), sep = ";", stringsAsFactors = FALSE)
-
+general <- general[1:8,]
 #trees
 #load the processed table at 2.1
 # previousTrees <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_treesPreviousSemesters.csv"), sep = ",", dec = ".", stringsAsFactors = FALSE)
@@ -43,7 +44,7 @@ general <- read.csv(paste0(file_base, paste0("org/Vers", currentVersion, "_gener
 
 #young trees
 youngTrees <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_youngTrees.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
-youngTrees <- youngTrees[1:14,]
+youngTrees <- youngTrees[1:15,]
 
 #herbals
 herbals <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
@@ -66,18 +67,80 @@ herbals <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals.csv"
 #----------------------------------
 
 #--------------------------------------------------------------------
+# 2 COMBINE THE TREE TABLE FROM THE CURRENT YEAR WITH THE LAST YEARS
+
+#use the script CONVERT_SQL2TABLE.R
+#store the result in Biogeography_Dataprocessing/org/VersXX_trees_previousPlots.csv
+
+#combine the two tables
+trees_currentPlots <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_trees_currentPlots.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
+trees_currentPlots <- trees_currentPlots[1:93,] 
+trees_previousPlots <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_trees_previousPlots.csv"), sep = ",", dec = ".", stringsAsFactors = FALSE)
+
+trees_currentPlots$treeID <- NA
+
+for(i in 1:nrow(trees_currentPlots)){
+  #assign new plot ID
+  trees_currentPlots$plot[i] <- paste0("fs-05", trees_currentPlots$plot[i])
+  
+  #assign new tree ID
+  if(str_length(trees_currentPlots$numberPlate[i]) == 4){
+    trees_currentPlots$treeID[i] <- paste0(trees_currentPlots$colorPlate[i], "0", trees_currentPlots$numberPlate[i])
+  }else if(str_length(trees_currentPlots$numberPlate[i]) == 3){
+    trees_currentPlots$treeID[i] <- paste0(trees_currentPlots$colorPlate[i], "00", trees_currentPlots$numberPlate[i])
+  }else{
+    trees_currentPlots$treeID[i] <- paste0(trees_currentPlots$colorPlate[i], "000", trees_currentPlots$numberPlate[i])
+  }
+  
+  #assign the tree species
+  if(trees_currentPlots$species[i] == "Hainbuche"){
+    trees_currentPlots$species[i] <- "HBU"
+  }else if(trees_currentPlots$species[i] == "Stieleiche"){
+    trees_currentPlots$species[i] <- "EIS"
+  }else if(trees_currentPlots$species[i] == "Traubeneiche"){
+    trees_currentPlots$species[i] <- "EIT"
+  }else if(trees_currentPlots$species[i] == "Rotbuche"){
+    trees_currentPlots$species[i] <- "BUR"
+  }else if(trees_currentPlots$species[i] == "Schwarzerle"){
+    trees_currentPlots$species[i] <- "ERS"
+  }else if(trees_currentPlots$species[i] == "Laerche"){
+    trees_currentPlots$species[i] <- "LAE"
+  }else if(trees_currentPlots$species[i] == "Douglasie"){
+    trees_currentPlots$species[i] <- "DGL"
+  }
+}
+
+trees_previousPlots$easting <- NULL
+trees_previousPlots$northing <- NULL
+trees_previousPlots$remarks <- NULL
+
+
+trees_currentPlots$creatorID <- "FMLRS"
+trees_currentPlots$ID <- seq(from = 1077, to = as.numeric(1076+nrow(trees_currentPlots)), by = 1)
+trees_currentPlots <- cbind(trees_currentPlots[2], trees_currentPlots[15], trees_currentPlots[16], trees_currentPlots[7], trees_currentPlots[13], trees_currentPlots[14], trees_currentPlots[1])
+names(trees_currentPlots) <- names(trees_previousPlots)
+
+#combine the tables
+trees <- rbind(trees_previousPlots, trees_currentPlots)
+
+rm(trees_currentPlots, trees_previousPlots)
+#write.csv(trees, paste0(file_base, paste0("processed/treesAll_vers", currentVersion, ".csv")), row.names = FALSE)
+#--------------------------------------------------------------------
 
 # 2 ASSIGN THE HIGHT LEVEL
 
 # 2.1 assign the height level to each living tree (5m levels)
 
 levels <- seq(from = 5, to = 45, by = 5)
+trees <- read.csv(paste0(file_base, paste0("processed/treesAll_vers", currentVersion, ".csv")), stringsAsFactors = FALSE)
+
 
 #derivation
 # trees$totalHeight[1] > levels
 # levels[trees$totalHeight[1] > levels]
 # length(levels[trees$totalHeight[1] > levels])
 # length(levels[trees$totalHeight[1] > levels]) + 1
+
 
 for(i in 1:nrow(trees)){
   if(!is.na(trees$height[i])){
@@ -86,9 +149,8 @@ for(i in 1:nrow(trees)){
     trees$level[i] <- NA
   }
 }
-rm(levels)
 
-# write.csv(trees, paste0(file_base, paste0("processed/treesWithLevels_vers", currentVersion, ".csv")), row.names = FALSE)
+#write.csv(trees, paste0(file_base, paste0("processed/treesWithLevels_vers", currentVersion, ".csv")), row.names = FALSE)
 trees <- read.csv(paste0(file_base, paste0("processed/treesWithLevels_vers", currentVersion, ".csv")), stringsAsFactors = FALSE)
 #--------------------------------------------------------------------
 
@@ -100,7 +162,7 @@ trees <- read.csv(paste0(file_base, paste0("processed/treesWithLevels_vers", cur
 
 #smaller deathwood parts are not included in the form
 
-levels <- seq(from = 5, to = 45, by = 5)
+deathwood <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_deathwood.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
 
 for(i in 1:nrow(deathwood)){
   if(deathwood$class[i] == 2 | deathwood$class[i] > 3){
@@ -112,7 +174,13 @@ for(i in 1:nrow(deathwood)){
   }
 }
 
-# write.csv(deathwood, paste0(file_base, paste0("processed/deathwoodWithLevels_vers", currentVersion, ".csv")), row.names = FALSE)
+#change plot number
+for(i in 1:nrow(deathwood)){
+  #assign new plot ID
+  deathwood$plot[i] <- paste0("fs-05", deathwood$plot[i])
+}
+
+#write.csv(deathwood, paste0(file_base, paste0("processed/deathwoodWithLevels_vers", currentVersion, ".csv")), row.names = FALSE)
 deathwood <- read.csv(paste0(file_base, paste0("processed/deathwoodWithLevels_vers", currentVersion, ".csv")), stringsAsFactors = FALSE)
 
 #--------------------------------------------------------------------

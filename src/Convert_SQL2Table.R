@@ -1,9 +1,11 @@
 file_base <- "~/Studium/02_Master/07_Biogeographie/"
+currentVersion <- "11"
+
 library(RSQLite)
 #----------------------------------------------------------
 #using the SQLite Database
 sqlite    <- dbDriver("SQLite")
-db <- dbConnect(sqlite, paste0(file_base, "Datenbank/MOFGeoDB.sqlite"))
+db <- dbConnect(sqlite, paste0(file_base, "Daten/Datenbank/MOFGeoDB.sqlite"))
 
 dbListTables(db)
 
@@ -34,4 +36,6 @@ trees <- trees[!is.na(trees$plot),]
 names(trees)[1] <- "ID"
 
 #write the df
-write.csv(trees, paste0(file_base, "R/Biogeo_Dataprocessing/org/Vers00_treesPreviousSemesters.csv"), row.names = FALSE)
+write.csv(trees, paste0(file_base, paste0("R/Biogeography_Dataprocessing/org/Vers", currentVersion, "_trees_previousPlots.csv")), row.names = FALSE)
+
+dbDisconnect(sqlite, paste0(file_base, "Daten/Datenbank/MOFGeoDB.sqlite"))
