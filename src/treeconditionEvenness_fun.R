@@ -20,7 +20,7 @@ treecondition_evenness <- function(treeTable, deathwoodTable, entropy, outputFol
     entropyInPlot <- entropy$entropy[entropy$plotNumber == unique(treeTable$plot)[i]]
     #load the tree species of one plot
     treesInPlot <- treeTable[treeTable$plot == unique(treeTable$plot)[i],]
-    deadTreesInPlot <- deathwoodTable[deathwoodTable$plot == unique(treeTable$plot)[i],]
+    deadTreesInPlot <- deathwoodTable[deathwoodTable$plot == unique(treeTable$plot)[i] & (deathwoodTable$class == 1 | deathwoodTable$class == 3),]
     #for maximum entropy:
     #calculate the number of conditions
     if(nrow(treesInPlot)!= 0 & nrow(deadTreesInPlot) != 0){

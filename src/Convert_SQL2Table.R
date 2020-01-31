@@ -17,6 +17,45 @@ trees$statusID <- NULL
 trees$geometry <- NULL
 trees$plot <- NA
 
+#estimate deathwood
+trees$deathwood <- 0
+for(i in 1:nrow(trees)){
+  if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot nur Stamm"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. liegt schief"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. Specht mittel. "){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. rinde. "){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. rinde. gegenüber c7."){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. rind3. ."){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. Rinde . ."){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. rinde. nahe erster Qb."){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "oben offen. keine Krone. tot"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "viele Baumpilze. jedoch unter 25%. Totholz"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. viel Rinde ab und lose. stammartiger Ast steckt abgebrochen neben Stamm im Boden. Rindenschürfung auf jeder Höhe"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "wurde Februar 2019 gefällt und bleibt liegen"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. abgebrochen auf 7m. Stamm 20m daneben. Krone fehlt"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "tot. abgeknickt"){
+    trees$deathwood[i] <- 1
+  }else if(!is.na(trees$remarks[i]) & trees$remarks[i] == "Totholz"){
+    trees$deathwood[i] <- 1
+  }
+}
+
+
 
 #loading the treePlot table (contain the connection tree to plot number)
 treePlot <- dbReadTable(db, "treePlot")
@@ -37,5 +76,3 @@ names(trees)[1] <- "ID"
 
 #write the df
 write.csv(trees, paste0(file_base, paste0("R/Biogeography_Dataprocessing/org/Vers", currentVersion, "_trees_previousPlots.csv")), row.names = FALSE)
-
-dbDisconnect(sqlite, paste0(file_base, "Daten/Datenbank/MOFGeoDB.sqlite"))

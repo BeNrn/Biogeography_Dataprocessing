@@ -16,8 +16,8 @@ library(stringr)
 # 1 READ THE DATA
 
 #general
-general <- read.csv(paste0(file_base, paste0("org/Vers", currentVersion, "_general.csv")), sep = ";", stringsAsFactors = FALSE)
-general <- general[1:8,]
+#general <- read.csv(paste0(file_base, paste0("org/Vers", currentVersion, "_general.csv")), sep = ";", stringsAsFactors = FALSE)
+#general <- general[1:8,]
 #trees
 #load the processed table at 2.1
 # previousTrees <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_treesPreviousSemesters.csv"), sep = ",", dec = ".", stringsAsFactors = FALSE)
@@ -43,11 +43,11 @@ general <- general[1:8,]
 # rm(previousTrees)
 
 #young trees
-youngTrees <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_youngTrees.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
-youngTrees <- youngTrees[1:15,]
+#youngTrees <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_youngTrees.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
+#youngTrees <- youngTrees[1:15,]
 
 #herbals
-herbals <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
+#herbals <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
 
 #deathwood
 #load the processed table at 2.2
@@ -109,10 +109,12 @@ for(i in 1:nrow(trees_currentPlots)){
     trees_currentPlots$species[i] <- "DGL"
   }
 }
+trees_previousPlots <- trees_previousPlots[trees_previousPlots$deathwood == 0,]
 
 trees_previousPlots$easting <- NULL
 trees_previousPlots$northing <- NULL
 trees_previousPlots$remarks <- NULL
+trees_previousPlots$deathwood <- NULL
 
 
 trees_currentPlots$creatorID <- "FMLRS"
@@ -126,10 +128,38 @@ trees <- rbind(trees_previousPlots, trees_currentPlots)
 rm(trees_currentPlots, trees_previousPlots)
 #write.csv(trees, paste0(file_base, paste0("processed/treesAll_vers", currentVersion, ".csv")), row.names = FALSE)
 #--------------------------------------------------------------------
+# 3 COMBINE THE DEATHWOOD TABLE FROM THE CURRENT YEAR WITH THE LAST YEARS
 
-# 2 ASSIGN THE HIGHT LEVEL
+#use the script CONVERT_SQL2TABLE.R
+#store the result in Biogeography_Dataprocessing/org/VersXX_trees_previousPlots.csv
 
-# 2.1 assign the height level to each living tree (5m levels)
+#combine the two tables
+deathwood_current <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_deathwood.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
+deathwood_previous <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_trees_previousPlots.csv"), sep = ",", dec = ".", stringsAsFactors = FALSE)
+deathwood_previous <- deathwood_previous[deathwood_previous$deathwood == 1,]
+
+deathwood_current$treeID <- NA
+
+for(i in 1:nrow(deathwood_current)){
+  #assign new plot ID
+  deathwood_current$plot[i] <- paste0("fs-05", deathwood_current$plot[i])
+}
+
+deathwood_previous <- cbind(deathwood_previous[10], deathwood_previous[7]) 
+deathwood_previous$class <- 1
+deathwood_previous <- cbind(deathwood_previous[1], deathwood_previous[3], deathwood_previous[2])
+deathwood_current <- cbind(deathwood_current[1], deathwood_current[2], deathwood_current[3])
+
+names(deathwood_previous) <- names(deathwood_current)
+#combine the tables
+deathwood <- rbind(deathwood_previous, deathwood_current)
+
+rm(deathwood_previous, deathwood_current)
+#write.csv(deathwood, paste0(file_base, paste0("processed/deathwoodAll_vers", currentVersion, ".csv")), row.names = FALSE)
+#--------------------------------------------------------------------
+# 4 ASSIGN THE HIGHT LEVEL
+
+# 4.1 assign the height level to each living tree (5m levels)
 
 levels <- seq(from = 5, to = 45, by = 5)
 trees <- read.csv(paste0(file_base, paste0("processed/treesAll_vers", currentVersion, ".csv")), stringsAsFactors = FALSE)
@@ -154,7 +184,7 @@ for(i in 1:nrow(trees)){
 trees <- read.csv(paste0(file_base, paste0("processed/treesWithLevels_vers", currentVersion, ".csv")), stringsAsFactors = FALSE)
 #--------------------------------------------------------------------
 
-# 2.2 assign the height level to each dead tree (5m levels)
+# 4.2 assign the height level to each dead tree (5m levels)
 
 #only the category 1 (standing tree) and 3 (lying tree) should be assigned to a height level
 #-> other categories = NA
@@ -162,22 +192,18 @@ trees <- read.csv(paste0(file_base, paste0("processed/treesWithLevels_vers", cur
 
 #smaller deathwood parts are not included in the form
 
-deathwood <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_deathwood.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
+deathwood <- read.csv(paste0(file_base, "processed/deathwoodAll_vers", currentVersion, ".csv"), sep = ",", dec = ",", stringsAsFactors = FALSE)
 
 for(i in 1:nrow(deathwood)){
   if(deathwood$class[i] == 2 | deathwood$class[i] > 3){
     deathwood$level[i] <- NA
-  }else if(deathwood$class[i] == 3){
+  }else if(deathwood$class[i] == 3 & !is.na(deathwood$length[i])){
     deathwood$level[i] <- 1
-  }else{
+  }else if(deathwood$class[i] == 1 & !is.na(deathwood$length[i])){
     deathwood$level[i] <- length(levels[deathwood$length[i] > levels]) + 1
+  }else{
+    deathwood$level[i] <- NA
   }
-}
-
-#change plot number
-for(i in 1:nrow(deathwood)){
-  #assign new plot ID
-  deathwood$plot[i] <- paste0("fs-05", deathwood$plot[i])
 }
 
 #write.csv(deathwood, paste0(file_base, paste0("processed/deathwoodWithLevels_vers", currentVersion, ".csv")), row.names = FALSE)
@@ -185,7 +211,7 @@ deathwood <- read.csv(paste0(file_base, paste0("processed/deathwoodWithLevels_ve
 
 #--------------------------------------------------------------------
 
-# 3 STATISTICAL ANALYSIS
+# 5 STATISTICAL ANALYSIS
 
 #needed parameters:
 # tree species diversity    [v]
@@ -224,7 +250,7 @@ deathwood <- read.csv(paste0(file_base, paste0("processed/deathwoodWithLevels_ve
 #Hmax = 0,5 for p(beech) and 0,5 for p(oak)
 #--------------------------------------------------------------------
 
-# 3.1 tree species entropy
+# 5.1 tree species entropy
 
 #load tree species entropy function
 source(paste0(file_base, "src/treespeciesEntropy_fun.R"))
@@ -234,7 +260,7 @@ treespecies_entropy(treeTable = trees, outputFolder = paste0(file_base, "entropy
 totalTreespeciesEntropy <- read.csv(paste0(file_base, "entropy/treeSpeciesEntropy_vers", currentVersion, ".csv"), stringsAsFactors = FALSE)
 #------------------------------------------------------------------------------
 
-# 3.2 tree level entropy
+# 5.2 tree level entropy
 #using living and dead trees
 
 source(paste0(file_base, "src/treelevelEntropy_fun.R"))
@@ -243,7 +269,7 @@ treelevel_entropy(treeTable = trees, deathwoodTable = deathwood, outputFolder = 
 totalTreeLevelEntropy <- read.csv(paste0(file_base, paste0("entropy/treeLevelEntropy_vers", currentVersion,".csv")), stringsAsFactors = FALSE)
 #------------------------------------------------------------------------------
 
-# 3.3 tree condition entropy
+# 5.3 tree condition entropy
 #only deathwood of the class 1 and 3 is assigned as condition 2 (dead)
 
 source(paste0(file_base, "src/treeconditionEntropy_fun.R"))
@@ -253,7 +279,7 @@ treecondition_entropy(treeTable = trees, deathwoodTable = deathwood, outputFolde
 totalTreeConditionEntropy <- read.csv(paste0(file_base, paste0("entropy/treeConditionEntropy_vers", currentVersion,".csv")), stringsAsFactors = FALSE)
 #------------------------------------------------------------------------------
 
-# 3.4 overall entropy
+# 5.4 overall entropy
  
 source(paste0(file_base, "src/overallEntropy_fun.R"))
 overall_entropy(species = read.csv(paste0(file_base, "entropy/treeSpeciesEntropy_vers", currentVersion, ".csv"), stringsAsFactors = FALSE),
@@ -264,7 +290,7 @@ overall_entropy(species = read.csv(paste0(file_base, "entropy/treeSpeciesEntropy
 overallEntropy <- read.csv(paste0(file_base, paste0("entropy/overallEntropy_vers", currentVersion,".csv")), stringsAsFactors = FALSE)
 #------------------------------------------------------------------------------
 
-# 3.5 tree species evenness
+# 5.5 tree species evenness
 
 #load tree species evenness function
 source(paste0(file_base, "src/treespeciesEvenness_fun.R"))
@@ -277,7 +303,7 @@ treespecies_evenness(treeTable = trees,
 totalTreespeciesEvenness <- read.csv(paste0(file_base, "evenness/treeSpeciesEvenness_vers", currentVersion, ".csv"), stringsAsFactors = FALSE)
 #------------------------------------------------------------------------------
 
-# 3.6 tree level evenness
+# 5.6 tree level evenness
 
 #load tree level evenness function
 source(paste0(file_base, "src/treelevelEvenness_fun.R"))
@@ -291,7 +317,7 @@ treelevel_evenness(treeTable = trees,
 totalTreelevelEvenness <- read.csv(paste0(file_base, "evenness/treeLevelEvenness_vers", currentVersion, ".csv"), stringsAsFactors = FALSE)
 #------------------------------------------------------------------------------
 
-# 3.7 tree condition evenness
+# 5.7 tree condition evenness
 
 #load tree condition evenness function
 source(paste0(file_base, "src/treeconditionEvenness_fun.R"))
@@ -305,7 +331,7 @@ treecondition_evenness(treeTable = trees,
 totalTreeconditionEvenness <- read.csv(paste0(file_base, "evenness/treeConditionEvenness_vers", currentVersion, ".csv"), stringsAsFactors = FALSE)
 #------------------------------------------------------------------------------
 
-# 3.8 overall evenness
+# 5.8 overall evenness
 
 #load overall evenness function
 source(paste0(file_base, "src/overallEvenness_fun.R"))
