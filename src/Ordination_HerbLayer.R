@@ -1,11 +1,12 @@
-file_base <- "F:/MODULE/07_Biogeographie/R/Biogeo_Dataprocessing/"
-currentVersion <- "10"
+file_base <- "~/Studium/02_Master/07_Biogeographie/R/Biogeography_Dataprocessing/"
+#file_base <- "F:/MODULE/07_Biogeographie/R/Biogeo_Dataprocessing/"
+currentVersion <- "11"
 
 library(vegan)
 library(reshape2)
 #-------------------------------------
 
-herbals_eigene <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals_EIGENE.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
+herbals_eigene <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
 herbals_andere <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals_ANDERE.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
 #-------------------------------------
 
