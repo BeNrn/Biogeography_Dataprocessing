@@ -52,10 +52,12 @@ herbals_andere[,4] <- NULL
 
 #-------------------------------------
 
-#2 restructure herbals eigene
+#2 restructure herbals_eigene
 
 herbals_eigene$comment <- NULL
 herbals_eigene$foto <- NULL
+herbals_eigene <- herbals_eigene[herbals_eigene$processing_information != "ignorieren",]
+herbals_eigene$processing_information <- NULL
 names(herbals_eigene)[1] <- names(herbals_andere)[1]
 
 #change plot ID
