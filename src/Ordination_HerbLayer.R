@@ -52,7 +52,7 @@ herbals_andere[,4] <- NULL
 
 #-------------------------------------
 
-#2 restructure herbals_eigene
+# 2 restructure herbals_eigene
 
 herbals_eigene$comment <- NULL
 herbals_eigene$foto <- NULL
@@ -65,9 +65,10 @@ for(i in 1:nrow(herbals_eigene)){
   herbals_eigene$plotID[i] <- paste0("fs-05", herbals_eigene$plotID[i])
 }
 
+herbals_eigene <- herbals_eigene[!is.na(herbals_eigene$lat),]
 #-------------------------------------
 
-#3 combine the two datasets
+# 3 combine the two datasets
 
 herbals <- rbind(herbals_andere, herbals_eigene)
 rm(herbals_andere, herbals_eigene)
@@ -76,24 +77,71 @@ write.csv(herbals, paste0(file_base, paste0("processed/herbals_vers", currentVer
 herbals <- read.csv(paste0(file_base, "processed/herbals_vers", currentVersion, ".csv"), sep = ",", stringsAsFactors = FALSE)
 #-------------------------------------
 
-#4 start with the ordination
+# 4 reshape the dataframe
+
+#assing a metrical scale level
+for(i in 1:nrow(herbals)){
+  if(herbals$coverage[i] == "r"){
+    herbals$coverage[i] <- 0.01
+  }else if(herbals$coverage[i] == "+"){
+    herbals$coverage[i] <- 0.1
+  }else if(herbals$coverage[i] == "1"){
+    herbals$coverage[i] <- 1
+  }else if(herbals$coverage[i] == "2"){
+    herbals$coverage[i] <- 15
+  }else if(herbals$coverage[i] == "3"){
+    herbals$coverage[i] <- 37.5
+  }else if(herbals$coverage[i] == "4"){
+    herbals$coverage[i] <- 62.5
+  }else{
+    herbals$coverage[i] <- 87.5
+  }
+}
+herbals$coverage <- as.numeric(herbals$coverage)
+
+allSpecies <- unique(herbals$lat)
+processHerb <- matrix(nrow = length(unique(herbals$plotID)), ncol = length(allSpecies))
+colnames(processHerb) <- allSpecies
+rownames(processHerb) <- unique(herbals$plotID)
+
+for(i in 1:nrow(processHerb)){
+  for(j in 1:ncol(processHerb)){
+    temp_herb <- herbals[herbals$plotID == unique(herbals$plotID)[i],]
+    if(temp_herb$lat .......  )
+  }
+}
+
+for(i in 1:nrow(herbals))
+
+processHerb <- as.data.frame(t(processHerb))
+names(processHerb[,1:length(allSpecies)]) <- allSpecies 
+
+#-------------------------------------
+
+
+# 5 start with the ordination
 
 
 
-test <- herbals[herbals$plotID == unique(herbals$plotID)[1],]
-test1 <- test
-test1$lat <- NULL
-test1$plotID <- NULL
-test1$ID <- 1:nrow(test1)
-test1 <- cbind(test1[3], test1[1:2])
+#remove all unneccessary data
+herb_001 <- herbals[herbals$plotID == unique(herbals$plotID)[1],]
+herb_001$lat <- NULL
+herb_001$plotID <- NULL
+column_names <- herb_001$species
 
-reshape2::acast(test1, ID ~ species)
+herb001_transposed<- as.data.frame(t(herb_001$coverage))
+
+names(herb001_transposed) <- column_names
+
+cca(herb001_transposed)
+
+reshape2::acast(herb_001, ID ~ species)
 
 #restructure the df
 test <- herbals
 test$ID <- 1:nrow(test)
 test <- cbind(test[5], test[1:4])
-melttest <- melt(test, id.vars = "ID")
+melttest <- melt(herb_001, id.vars = "ID")
 
 reshape2::acast(melttest, melttest$variable ~ melttest$value)
 

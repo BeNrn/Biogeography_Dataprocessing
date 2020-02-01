@@ -1,7 +1,7 @@
 plot;species;lat;coverage;comment;foto;processing_information
 1;Kleinblütiges Springkraut;Impatiens parviflora;r;zuvor als Impatiens noli-tangere bezeichnet;20190604_134001;
 1;Waldmeister;Galium odoratum;+;NA;NA;
-1;Eiche;Quercus …;1;"vermutlich quercus petreae oder robur; vgl tabellen Göttlicher ";NA;
+1;Eiche;NA;1;"vermutlich quercus petreae oder robur; vgl tabellen Göttlicher ";NA;
 1;Einbluetiges Perlgras;Melica uniflora;r;NA;NA;
 1;Große Sternmiere;Stella holostea;r;NA;NA;
 1;Kleinbluetiges Springkraut;Impatiens parviflora;r;NA;20190604_134001;
@@ -11,7 +11,7 @@ plot;species;lat;coverage;comment;foto;processing_information
 1;H002;NA;r;Gras-Streifig/lanzettlich / Juncaceae;NA;ignorieren
 2;Waldsauerklee;Oxalis acetosella;1;NA;20190523_142637 RB;
 2;Waldmeister;Galium odoratum;2;NA;NA;
-2;Maigloeckchen;NA;+;Herbstzeitlose? Colchicum autumnale, könnte sein nach Floraweb;NA;
+2;Maigloeckchen;Convallaria majalis;+;Herbstzeitlose? Colchicum autumnale, könnte sein nach Floraweb;NA;
 2;Busch-Windröschen;Anemone nemorosa;1;NA;20190502_150801;
 2;Rotbuche;Fagus sylvatica;1;NA;20190502_150726;
 2;Traubeneiche;Quercus petraea;r;NA;20190502_150903;
@@ -55,8 +55,8 @@ plot;species;lat;coverage;comment;foto;processing_information
 6;Kleinblütiges Springkraut;Impatiens parviflora;1;NA;NA;
 6;Farn;NA;+;NA;NA;
 6;Gewoehnliches Kletten-Labkraut;Galium aparine;r;NA;NA;
-6;Eiche ;Quercus …;r;(Keimling) vermutlich quercus petreae oder robur;NA;
-6;Heckenkirsche /Wald-Geißblatt?;Lonicera …;r;Das nichtssagende, samtige Blaetter (Herbarium);NA;
+6;Eiche ;NA;r;(Keimling) vermutlich quercus petreae oder robur;NA;
+6;Heckenkirsche /Wald-Geißblatt?;NA;r;Das nichtssagende, samtige Blaetter (Herbarium);NA;
 6;Buschwindroeschen;Anemone nemorosa;r;NA;NA;
 6;Gemeiner Hohlzahn;Galeopsis tetrahit;r;Herbarium zuvor als Urtica dioica gekennzeichnet;NA;
 7;Winter-Linde;Tilia cordata;r;zuvor als Fraxinus excelsior / Herbar als plot 6 ?;NA;
