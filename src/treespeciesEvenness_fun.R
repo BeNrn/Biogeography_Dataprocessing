@@ -43,6 +43,9 @@ treespecies_evenness <- function(treeTable, entropy, outputFolder){
     max_entropy <- n * entropy_val * -1
     #evenness
     evenness <- entropyInPlot/max_entropy
+    #to avoid NAs, the EVENNESS is defined as zero, 
+    #which leads eventually to a low overallEvenness (following Lingenfelder)
+    if(is.na(evenness)){evenness <- 0}
     ######################################
     
     if(i == 1){
