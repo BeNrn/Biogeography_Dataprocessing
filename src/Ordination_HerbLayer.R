@@ -3,7 +3,6 @@ file_base <- "~/Studium/02_Master/07_Biogeographie/R/Biogeography_Dataprocessing
 currentVersion <- "11"
 
 library(vegan)
-library(reshape2)
 #-------------------------------------
 
 herbals_eigene <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
@@ -73,7 +72,7 @@ herbals_eigene <- herbals_eigene[!is.na(herbals_eigene$lat),]
 herbals <- rbind(herbals_andere, herbals_eigene)
 rm(herbals_andere, herbals_eigene)
 
-write.csv(herbals, paste0(file_base, paste0("processed/herbals_vers", currentVersion, ".csv")), row.names = FALSE)
+#write.csv(herbals, paste0(file_base, paste0("processed/herbals_vers", currentVersion, ".csv")), row.names = FALSE)
 herbals <- read.csv(paste0(file_base, "processed/herbals_vers", currentVersion, ".csv"), sep = ",", stringsAsFactors = FALSE)
 #-------------------------------------
 
@@ -104,83 +103,49 @@ processHerb <- matrix(nrow = length(unique(herbals$plotID)), ncol = length(allSp
 colnames(processHerb) <- allSpecies
 rownames(processHerb) <- unique(herbals$plotID)
 
+#iterate over the plot locations
 for(i in 1:nrow(processHerb)){
-  for(j in 1:ncol(processHerb)){
-    temp_herb <- herbals[herbals$plotID == unique(herbals$plotID)[i],]
-    if(temp_herb$lat .......  )
+  temp_herb <- herbals[herbals$plotID == unique(herbals$plotID)[i],]
+  #iterate over the species
+  for(j in 1: ncol(processHerb)){
+    count <- temp_herb$lat == colnames(processHerb)[j]
+    processHerb[i,j] <- sum(count, na.rm = TRUE)
   }
 }
+#to df
+processHerb <- as.data.frame(processHerb)
 
-for(i in 1:nrow(herbals))
-
-processHerb <- as.data.frame(t(processHerb))
-names(processHerb[,1:length(allSpecies)]) <- allSpecies 
+#write.csv(processHerb, paste0(file_base, paste0("processed/herbals_vers", currentVersion, ".csv")), row.names = FALSE)
+processHerb <- read.csv(paste0(file_base, "processed/herbals_vers", currentVersion, ".csv"), sep = ",", stringsAsFactors = FALSE)
 
 #-------------------------------------
 
-
 # 5 start with the ordination
 
+#first try
+ca <- cca(processHerb)
+plot(ca,display="sites")
+
+ca <- decorana(processHerb)
+plot(ca,display="sites")
+
+#value distribution
+for(i in 1:ncol(processHerb)){print(unique(processHerb[,i]))}
+#only the distribution values 0, 1 and 2 are present. No species can be found more often. 
+
+#->> values are not suited for analysis
+
+#second try with half of the dataset
+processHerb_half <- processHerb[,1:(0.5*ncol(processHerb))]
+processHerb_half <- processHerb[apply(processHerb_half, 1, sum) != 0]
+
+ca <- cca(processHerb_half)
+plot(ca,display="sites")
+
+ca <- decorana(processHerb_half)
+plot(ca,display="sites")
 
 
-#remove all unneccessary data
-herb_001 <- herbals[herbals$plotID == unique(herbals$plotID)[1],]
-herb_001$lat <- NULL
-herb_001$plotID <- NULL
-column_names <- herb_001$species
-
-herb001_transposed<- as.data.frame(t(herb_001$coverage))
-
-names(herb001_transposed) <- column_names
-
-cca(herb001_transposed)
-
-reshape2::acast(herb_001, ID ~ species)
-
-#restructure the df
-test <- herbals
-test$ID <- 1:nrow(test)
-test <- cbind(test[5], test[1:4])
-melttest <- melt(herb_001, id.vars = "ID")
-
-reshape2::acast(melttest, melttest$variable ~ melttest$value)
+#->> values are still not suited for analysis, though the distribution after decorana appears improved 
 
 
-
-names <- unique(herbals$species)
-
-herbals[,5:114] <- NA
-names(herbals)[5:114] <- names
-
-for(i in 1:nrow(herbals)){
-  for(j in 5:114){
-    if(herbals$species[i] == names(herbals)[j]){
-      herbals[i,j] <- herbals$coverage[i]
-    }else{
-      herbals[i,j] <- 0
-    }
-  }
-}
-
-
-for(i in 1:unique(herbals$plotID)){
-  temp_df <- herbals[herbals$plotID == unique(herbals$plotID)[i],]
-  
-}
-
-
-
-test <- herbals[herbals$plotID == "fs-058",]
-
-neuerDF <- unique(herbals$plotID)
-neuerDF <- data.frame(plotID = neuerDF, Art1 = NA)
-neuerDF[,3:111] <- NA
-names(neuerDF)[2:111] <- names
-
-for(i in 1:length(unique(herbals$plotID))){
-  for(j in 2:ncol(neuerDF)){
-    if(herbals$)
-  }
-}
-
-unique(test$Waldehrenpreis)
