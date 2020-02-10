@@ -148,4 +148,6 @@ plot(ca,display="sites")
 
 #->> values are still not suited for analysis, though the distribution after decorana appears improved 
 
+########
+#adding environmental variables is necessary for reasonable results
 
