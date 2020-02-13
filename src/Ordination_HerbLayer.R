@@ -4,9 +4,14 @@ currentVersion <- "11"
 
 library(vegan)
 #-------------------------------------
-
+#load the data
+#herbal layer
 herbals_eigene <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
 herbals_andere <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_herbals_ANDERE.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
+
+#general
+general <- read.csv(paste0(file_base, paste0("org/Vers", currentVersion, "_general.csv")), sep = ";", stringsAsFactors = FALSE)
+general <- general[1:8,]
 #-------------------------------------
 
 # 1 restructure herbals andere
@@ -103,11 +108,34 @@ processHerb <- matrix(nrow = length(unique(herbals$plotID)), ncol = length(allSp
 colnames(processHerb) <- allSpecies
 rownames(processHerb) <- unique(herbals$plotID)
 
+#-------------------------------------
+
+# 5  assign the coverage of the three layers (tree, shrub, herbal)
+
+layerInfo <- cbind(general[2], general[10:12])
+
+rm(general)
+
+gap <- data.frame(x = rep(NA, nrow(processHerb)-(nrow(layerInfo))))
+
+gap <- cbind(gap, gap, gap, gap)
+names(gap) <- names(layerInfo)
+
+layerInfo <- rbind(gap, layerInfo)
+rm(gap)
+
+processHerb <- cbind(processHerb, layerInfo[2:4])
+
+rm(layerInfo)
+#-------------------------------------
+
+# 6 add the counts
+
 #iterate over the plot locations
 for(i in 1:nrow(processHerb)){
   temp_herb <- herbals[herbals$plotID == unique(herbals$plotID)[i],]
   #iterate over the species
-  for(j in 1: ncol(processHerb)){
+  for(j in 1:(ncol(processHerb)-3)){
     count <- temp_herb$lat == colnames(processHerb)[j]
     processHerb[i,j] <- sum(count, na.rm = TRUE)
   }
@@ -120,34 +148,23 @@ processHerb <- read.csv(paste0(file_base, "processed/herbals_vers", currentVersi
 
 #-------------------------------------
 
-# 5 start with the ordination
+# 7 start with the ordination
+
+processHerb <- processHerb[(44-7):44,]
 
 #first try
 ca <- cca(processHerb)
+ca
 plot(ca,display="sites")
 
-ca <- decorana(processHerb)
-plot(ca,display="sites")
+dca <- decorana(processHerb)
+dca
+plot(dca,display="sites")
 
 #value distribution
 for(i in 1:ncol(processHerb)){print(unique(processHerb[,i]))}
-#only the distribution values 0, 1 and 2 are present. No species can be found more often. 
-
-#->> values are not suited for analysis
-
-#second try with half of the dataset
-processHerb_half <- processHerb[,1:(0.5*ncol(processHerb))]
-processHerb_half <- processHerb[apply(processHerb_half, 1, sum) != 0]
-
-ca <- cca(processHerb_half)
-plot(ca,display="sites")
-
-ca <- decorana(processHerb_half)
-plot(ca,display="sites")
+#only the coverage distribution shows more variability 
+#without the coverage, the data doesn't contain suitable data
 
 
-#->> values are still not suited for analysis, though the distribution after decorana appears improved 
-
-########
-#adding environmental variables is necessary for reasonable results
 
