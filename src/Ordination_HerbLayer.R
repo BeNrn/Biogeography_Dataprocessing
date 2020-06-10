@@ -1,8 +1,12 @@
-file_base <- "~/Studium/02_Master/07_Biogeographie/R/Biogeography_Dataprocessing/"
+#file_base <- "~/Studium/02_Master/07_Biogeographie/R/Biogeography_Dataprocessing/"
 #file_base <- "F:/MODULE/07_Biogeographie/R/Biogeo_Dataprocessing/"
+file_base <- "D:/Hausabeit_Biogeo/Biogeography_Dataprocessing-master/"
+
 currentVersion <- "11"
 
 library(vegan)
+library(ggplot2)
+library(stringr)
 #-------------------------------------
 #load the data
 #herbal layer
@@ -116,6 +120,7 @@ layerInfo <- cbind(general[2], general[10:12])
 
 rm(general)
 
+#creating NAs for the missing data
 gap <- data.frame(x = rep(NA, nrow(processHerb)-(nrow(layerInfo))))
 
 gap <- cbind(gap, gap, gap, gap)
@@ -143,8 +148,8 @@ for(i in 1:nrow(processHerb)){
 #to df
 processHerb <- as.data.frame(processHerb)
 
-#write.csv(processHerb, paste0(file_base, paste0("processed/herbals_vers", currentVersion, ".csv")), row.names = FALSE)
-processHerb <- read.csv(paste0(file_base, "processed/herbals_vers", currentVersion, ".csv"), sep = ",", stringsAsFactors = FALSE)
+#write.csv(processHerb, paste0(file_base, paste0("processed/restructuredHerb_vers", currentVersion, ".csv")), row.names = FALSE)
+processHerb <- read.csv(paste0(file_base, "processed/restructuredHerb_vers", currentVersion, ".csv"), sep = ",", stringsAsFactors = FALSE)
 
 #-------------------------------------
 
@@ -152,8 +157,149 @@ processHerb <- read.csv(paste0(file_base, "processed/herbals_vers", currentVersi
 
 processHerb <- processHerb[(44-7):44,]
 
+
+######################################################
+#Add the trees
+trees <- read.csv(paste0(file_base, "org/Vers", currentVersion, "_trees_currentPlots.csv"), sep = ";", dec = ",", stringsAsFactors = FALSE)
+trees <- trees[1:93,]
+
+trees <- cbind(trees[,1],trees[,7])
+
+trees_count <- data.frame(plot = seq(1,8), NA, NA, NA, NA, NA, NA, NA)
+names(trees_count)[2:8] <- unique(trees[,2])
+
+for(i in seq(1,8)){
+  for(j in seq(1, length(unique(trees[,2])))){
+    #iterate over plots
+    tmp <- (trees[trees[,1] == i])
+    #iterate over species
+    trees_count[i,j+1] <- length(tmp[tmp == unique(trees[,2])[j]])
+  }
+}
+
+#actually add the trees
+processHerb <- cbind(processHerb, trees_count[,2:8])
+
+#write.csv(processHerb, paste0(file_base, paste0("processed/restructuredHerb_FINAL_vers", currentVersion, ".csv")), row.names = FALSE)
+finalHerb <- read.csv(paste0(file_base, "processed/restructuredHerb_FINAL_vers", currentVersion, ".csv"), sep = ",", stringsAsFactors = FALSE)
+######################################################
+
+#remove cols with only zeros
+finalHerb <- finalHerb[,74:ncol(finalHerb)]
+
+#indirekte Gradientenanalyse (S.64, Multivariate Statistik in der Ökologie, Wesche, Leyer)
+ca_indir <- cca(finalHerb[,1:41])
+ca_indir
+
+plot(ca_indir,display = "sites", xlim = c(-2,2))
+
+
+#plot the species, colored after their location
+df <- data.frame(species = names(finalHerb[,1:41]), CA1 = scores(ca_indir)$species[,1], CA2 = scores(ca_indir)$species[,2])
+df[4:11] <- rep(NA, 8)
+names(df)[4:11] <- c("plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8")
+
+
+for(i in 1: nrow(df)){
+  df$plot1[i] <- finalHerb[1,i]
+  df$plot2[i] <- finalHerb[2,i]
+  df$plot3[i] <- finalHerb[3,i]
+  df$plot4[i] <- finalHerb[4,i]
+  df$plot5[i] <- finalHerb[5,i]
+  df$plot6[i] <- finalHerb[6,i]
+  df$plot7[i] <- finalHerb[7,i]
+  df$plot8[i] <- finalHerb[8,i]
+}
+
+#merge the species and their coordinates from the first to the last plot plotwise together
+
+#header
+#species plot 1
+#species plot 2
+#...
+
+for(i in seq(1:8)){
+  if(i == 1){
+    plotDF <- df[df[,i+3] != 0,][,1:3]
+    plotDF <- cbind(plotDF, rep(i, nrow(plotDF)))
+    names(plotDF)[4] <- "plot" 
+  }else{
+    tempDF <- df[df[,i+3] != 0,][,1:3] 
+    tempDF <- cbind(tempDF, rep(i, nrow(tempDF)))
+    names(tempDF)[4] <- "plot"
+    plotDF <- rbind(plotDF, tempDF)
+  }
+}
+plotDF$plot <- as.character(plotDF$plot)
+
+#plot the result with the plot number as group argument
+ggplot(data = plotDF, mapping = aes(CA1, CA2))+
+  geom_point(aes(color = plot), size = 3)+
+  geom_text(aes(label = species, color = plot), hjust = -0.1, vjust = 0.5, size = 4, fontface = "bold")+
+  scale_color_discrete(l = 50, h = c(00, 170))+
+  xlab("CA1 Achse")+
+  ylab("CA2 Achse")+
+  theme(axis.text.x = element_text(color="black", size=12), 
+        axis.text.y = element_text(color="black", size=12),
+        axis.title.x = element_text(color = "black", size = 13),
+        axis.title.y = element_text(color = "black", size = 13))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "#5F6670")+
+  geom_vline(xintercept = 0, linetype = "dashed", color = "#5F6670")+
+  coord_cartesian(xlim = c(-3, 3), ylim = c(-2, 2))
+
+
+
+
+
+plot(df$x[df$plot1 != 0], df$y[df$plot1 != 0], col = "red", pch = 19, xlim = c(-4, 4), ylim = c(-1.5, 1.5), cex = 2)
+points(df$x[df$plot2 != 0], df$y[df$plot2 != 0], col = "green", pch = 19, cex = 1.3)
+points(df$x[df$plot3 != 0], df$y[df$plot3 != 0], col = "yellow", pch = 19)
+points(df$x[df$plot4 != 0], df$y[df$plot4 != 0], col = "blue", pch = 1)
+points(df$x[df$plot5 != 0], df$y[df$plot5 != 0], col = "black", pch = 3)
+points(df$x[df$plot6 != 0], df$y[df$plot6 != 0], col = "purple", pch = 3)
+points(df$x[df$plot7 != 0], df$y[df$plot7 != 0], col = "brown", pch = 2)
+points(df$x[df$plot8 != 0], df$y[df$plot8 != 0], col = "darkblue", pch = 2, cex = 2)
+
+
+
+scores(ca_indir)$species
+plot(scores(ca_indir)$species[,1], scores(ca_indir)$species[,2])
+
+
+#find the datapoints of the plot
+scores(ca_indir)$sites
+
+plot(scores(ca_indir)$sites[,1], scores(ca_indir)$sites[,2], xlim = c(-4, 4), ylim = c(-2, 2))
+
+df <- data.frame(scores(ca_indir)$sites)
+ggplot(data = df, mapping = aes(CA1, CA2))+
+  geom_point(color = "darkgreen", size = 2)+
+  geom_text(aes(label = c("Plot 1", "Plot 2", "Plot 3", "Plot 4", "Plot 5", "Plot 6", "Plot 7", "Plot 8")), hjust = -0.2, vjust = 0.5, size = 4)+
+  xlab("CA1 Achse")+
+  ylab("CA2 Achse")+
+  theme(axis.text.x = element_text(color="black", size=12), 
+        axis.text.y = element_text(color="black", size=12),
+        axis.title.x = element_text(color = "black", size = 13),
+        axis.title.y = element_text(color = "black", size = 13))+
+  geom_hline(yintercept = 0, linetype = "dashed", color = "#5F6670")+
+  geom_vline(xintercept = 0, linetype = "dashed", color = "#5F6670")+
+  coord_cartesian(xlim = c(-3, 3), ylim = c(-2, 2))
+  
+
+
+col_wildcard <- finalHerb[,51]
+
+df <- data.frame(x = scores(ca_indir)$sites[,1], y = scores(ca_indir)$sites[,2], col = sample(rainbow(length(unique(col_wildcard))), size = length(col_wildcard), replace = T))
+plot(x = df$x, y = df$y, col = df$col, pch = 19)
+
+
+rgb(red, green, blue, alpha, maxColorValue = 1)
+
+df  <- data.frame(id = 1:N, x1 = rnorm(N), x2 = rnorm(N), x3 = sample(rainbow(5),N,replace=T) )
+plot(x=df$x1, y=df$x2, col=df$x3, pch=19)
+
 #first try
-ca <- cca(processHerb)
+ca <- cca(finalHerb)
 ca
 plot(ca,display="sites")
 
